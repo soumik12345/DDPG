@@ -46,6 +46,7 @@ class Trainer:
         episode_timesteps = 0
         episode_num = 0
         evaluations = []
+        episode_rewards = []
         for ts in tqdm(range(1, int(self.config['time_steps']) + 1)):
             episode_timesteps += 1
             if ts < self.config['start_time_step']:
@@ -70,6 +71,7 @@ class Trainer:
                 self.agent.train(self.memory, self.config['batch_size'])
             if done:
                 self.writer.add_scalar('Episode Reward', episode_reward, ts)
+                episode_rewards.append(episode_reward)
                 state = self.env.reset()
                 done = False
                 episode_reward = 0
@@ -78,3 +80,4 @@ class Trainer:
         if (ts + 1) % self.config['evaluate_frequency'] == 0:
             evaluations.append(evaluate_policy(self.agent, self.config['env_name'], self.config['seed']))
             self.agent.save(f"./models/{self.save_file_name}")
+        return episode_rewards, evaluations
