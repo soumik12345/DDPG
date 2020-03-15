@@ -20,7 +20,7 @@ class DDPGAgent(object):
         return self.actor(state).cpu().data.numpy().flatten()
 
     @staticmethod
-    def soft_update(self, local_model, target_model, tau):
+    def soft_update(local_model, target_model, tau):
         for target_param, local_param in zip(target_model.parameters(), local_model.parameters()):
             target_param.data.copy_(tau * local_param.data + (1.0 - tau) * target_param.data)
 
@@ -51,5 +51,5 @@ class DDPGAgent(object):
         self.actor_optimizer.zero_grad()
         actor_loss.backward()
         self.actor_optimizer.step()
-        DDPGAgent.soft_update(self.critic, self.critic_target)
-        DDPGAgent.soft_update(self.actor, self.actor_target)
+        DDPGAgent.soft_update(self.critic, self.critic_target, self.tau)
+        DDPGAgent.soft_update(self.actor, self.actor_target, self.tau)

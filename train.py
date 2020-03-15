@@ -17,7 +17,7 @@ class Trainer:
         self.apply_seed()
         self.state_dimension = self.env.observation_space.shape[0]
         self.action_dimension = self.env.action_space.shape[0]
-        self.max_action = self.float(self.env.action_space.high[0])
+        self.max_action = float(self.env.action_space.high[0])
         self.device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
         self.agent = DDPGAgent(
             state_dim=self.state_dimension, action_dim=self.action_dimension,
@@ -46,8 +46,8 @@ class Trainer:
         episode_timesteps = 0
         episode_num = 0
         evaluations = []
-        for ts in tqdm(range(1, self.config['time_steps'] + 1)):
-            self.episode_timesteps += 1
+        for ts in tqdm(range(1, int(self.config['time_steps']) + 1)):
+            episode_timesteps += 1
             if ts < self.config['start_time_step']:
                 action = self.env.action_space.sample()
             else:
