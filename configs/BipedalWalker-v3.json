@@ -1,5 +1,5 @@
 {
-  "env_name": "BipedalWalker-v2",
+  "env_name": "BipedalWalker-v3",
   "seed": 0,
   "discount": 0.99,
   "tau": 5e-3,
