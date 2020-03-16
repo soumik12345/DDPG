@@ -31,11 +31,31 @@ class DDPGAgent(object):
         torch.save(self.actor_optimizer.state_dict(), filename + '_actor_optimizer')
 
     def load_checkpoint(self, filename):
-        self.critic.load_state_dict(torch.load(filename + "_critic"))
-        self.critic_optimizer.load_state_dict(torch.load(filename + "_critic_optimizer"))
+        self.critic.load_state_dict(
+            torch.load(
+                filename + "_critic",
+                map_location=torch.device('cpu')
+            )
+        )
+        self.critic_optimizer.load_state_dict(
+            torch.load(
+                filename + "_critic_optimizer",
+                map_location=torch.device('cpu')
+            )
+        )
         self.critic_target = deepcopy(self.critic)
-        self.actor.load_state_dict(torch.load(filename + "_actor"))
-        self.actor_optimizer.load_state_dict(torch.load(filename + "_actor_optimizer"))
+        self.actor.load_state_dict(
+            torch.load(
+                filename + "_actor",
+                map_location=torch.device('cpu')
+            )
+        )
+        self.actor_optimizer.load_state_dict(
+            torch.load(
+                filename + "_actor_optimizer",
+                map_location=torch.device('cpu')
+            )
+        )
         self.actor_target = deepcopy(self.actor)
 
     def train(self, replay_buffer, batch_size=100):

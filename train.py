@@ -77,7 +77,7 @@ class Trainer:
                 episode_reward = 0
                 episode_timesteps = 0
                 episode_num += 1
-        if (ts + 1) % self.config['evaluate_frequency'] == 0:
+        if ts % 1000 == 0:
             evaluations.append(evaluate_policy(self.agent, self.config['env_name'], self.config['seed']))
             self.agent.save(f"./models/{self.save_file_name}")
         return episode_rewards, evaluations
