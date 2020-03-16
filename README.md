@@ -10,6 +10,8 @@ Pytorch implementation of the Deep Deterministic Policy Gradients Algorithm for 
 
 **Mean Reward:** `169.5047038212551` sampled over `20` evaluation episodes.
 
+Experiment Conducted on **Free-P5000** instance provided by [Paperspace Gradient](gradient.paperspace.com).
+
 ![](./Results/BipedalWalker-V3.gif)
 
 ### LunarLanderContinuous-V2
@@ -17,6 +19,8 @@ Pytorch implementation of the Deep Deterministic Policy Gradients Algorithm for 
 **Mean Environment Link:** [https://gym.openai.com/envs/LunarLanderContinuous-v2/](https://gym.openai.com/envs/LunarLanderContinuous-v2/)
 
 **Reward:** `277.938417002226` sampled over `20` evaluation episodes.
+
+Experiment Conducted on **Free-P5000** instance provided by [Paperspace Gradient](gradient.paperspace.com).
 
 ![](./Results/LunarLanderContinuous-V2.gif)
 
