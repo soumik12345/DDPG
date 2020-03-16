@@ -1,86 +1,75 @@
-import gym
-import json
-import torch
-import numpy as np
-from tqdm import tqdm
-from src.utils import *
-from src.memory import *
-from src.agents import *
+from copy import deepcopy
+from .models import *
 
 
-class Trainer:
+class DDPGAgent(object):
 
-    def __init__(self, config_file, enable_logging):
-        self.enable_logging = enable_logging
-        self.config = Trainer.parse_config(config_file)
-        self.env = gym.make(self.config['env_name'])
-        self.apply_seed()
-        self.state_dimension = self.env.observation_space.shape[0]
-        self.action_dimension = self.env.action_space.shape[0]
-        self.max_action = float(self.env.action_space.high[0])
-        self.device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
-        self.agent = DDPGAgent(
-            state_dim=self.state_dimension, action_dim=self.action_dimension,
-            max_action=self.max_action, device=self.device,
-            discount=self.config['discount'], tau=self.config['tau']
-        )
-        self.save_file_name = f"DDPG_{self.config['env_name']}_{self.config['seed']}"
-        self.memory = ReplayBuffer(self.state_dimension, self.action_dimension)
-        if self.enable_logging:
-            from torch.utils.tensorboard import SummaryWriter
-            self.writer = SummaryWriter('./logs/' + self.config['env_name'] + '/')
+    def __init__(self, state_dim, action_dim, max_action, device, discount=0.99, tau=0.005):
+        self.device = device
+        self.discount = discount
+        self.tau = tau
+        self.actor = Actor(state_dim, action_dim, max_action).to(device)
+        self.actor_target = deepcopy(self.actor)
+        self.actor_optimizer = torch.optim.Adam(self.actor.parameters())
+        self.critic = Critic(state_dim, action_dim).to(device)
+        self.critic_target = deepcopy(self.critic)
+        self.critic_optimizer = torch.optim.Adam(self.critic.parameters())
+
+    def select_action(self, state):
+        state = torch.FloatTensor(state.reshape(1, -1)).to(self.device)
+        return self.actor(state).cpu().data.numpy().flatten()
 
     @staticmethod
-    def parse_config(json_file):
-        with open(json_file, 'r') as f:
-            configs = json.load(f)
-        return configs
+    def soft_update(local_model, target_model, tau):
+        for target_param, local_param in zip(target_model.parameters(), local_model.parameters()):
+            target_param.data.copy_(tau * local_param.data + (1.0 - tau) * target_param.data)
 
-    def apply_seed(self):
-        self.env.seed(self.config['seed'])
-        torch.manual_seed(self.config['seed'])
-        np.random.seed(self.config['seed'])
+    def save_checkpoint(self, filename):
+        torch.save(self.critic.state_dict(), filename + '_critic')
+        torch.save(self.critic_optimizer.state_dict(), filename + '_critic_optimizer')
+        torch.save(self.actor.state_dict(), filename + '_actor')
+        torch.save(self.actor_optimizer.state_dict(), filename + '_actor_optimizer')
 
-    def train(self):
-        state = self.env.reset()
-        done = False
-        episode_reward = 0
-        episode_timesteps = 0
-        episode_num = 0
-        evaluations = []
-        episode_rewards = []
-        for ts in tqdm(range(1, int(self.config['time_steps']) + 1)):
-            episode_timesteps += 1
-            if ts < self.config['start_time_step']:
-                action = self.env.action_space.sample()
-            else:
-                action = (
-                        self.agent.select_action(np.array(state))+ np.random.normal(
-                            0, self.max_action * self.config['expl_noise'],
-                            size=self.action_dimension
-                        )
-                ).clip(
-                    -self.max_action,
-                    self.max_action
-                )
-            next_state, reward, done, _ = self.env.step(action)
-            self.memory.add(
-                state, action, next_state, reward,
-                float(done) if episode_timesteps < self.env._max_episode_steps else 0)
-            state = next_state
-            episode_reward += reward
-            if ts >= self.config['start_time_step']:
-                self.agent.train(self.memory, self.config['batch_size'])
-            if done:
-                if self.enable_logging:
-                    self.writer.add_scalar('Episode Reward', episode_reward, ts)
-                episode_rewards.append(episode_reward)
-                state = self.env.reset()
-                done = False
-                episode_reward = 0
-                episode_timesteps = 0
-                episode_num += 1
-        if ts % 1000 == 0:
-            evaluations.append(evaluate_policy(self.agent, self.config['env_name'], self.config['seed']))
-            self.agent.save(f"./models/{self.save_file_name}")
-        return episode_rewards, evaluations
+    def load_checkpoint(self, filename):
+        self.critic.load_state_dict(
+            torch.load(
+                filename + "_critic",
+                map_location=torch.device('cpu')
+            )
+        )
+        self.critic_optimizer.load_state_dict(
+            torch.load(
+                filename + "_critic_optimizer",
+                map_location=torch.device('cpu')
+            )
+        )
+        self.critic_target = deepcopy(self.critic)
+        self.actor.load_state_dict(
+            torch.load(
+                filename + "_actor",
+                map_location=torch.device('cpu')
+            )
+        )
+        self.actor_optimizer.load_state_dict(
+            torch.load(
+                filename + "_actor_optimizer",
+                map_location=torch.device('cpu')
+            )
+        )
+        self.actor_target = deepcopy(self.actor)
+
+    def train(self, replay_buffer, batch_size=100):
+        state, action, next_state, reward, not_done = replay_buffer.sample(batch_size)
+        target_q = self.critic_target(next_state, self.actor_target(next_state))
+        target_q = reward + (not_done * self.discount * target_q).detach()
+        current_q = self.critic(state, action)
+        critic_loss = F.mse_loss(current_q, target_q)
+        self.critic_optimizer.zero_grad()
+        critic_loss.backward()
+        self.critic_optimizer.step()
+        actor_loss = -self.critic(state, self.actor(state)).mean()
+        self.actor_optimizer.zero_grad()
+        actor_loss.backward()
+        self.actor_optimizer.step()
+        DDPGAgent.soft_update(self.critic, self.critic_target, self.tau)
+        DDPGAgent.soft_update(self.actor, self.actor_target, self.tau)

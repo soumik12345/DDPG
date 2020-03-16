@@ -6,12 +6,12 @@ from tqdm import tqdm
 from src.utils import *
 from src.memory import *
 from src.agents import *
-from torch.utils.tensorboard import SummaryWriter
 
 
 class Trainer:
 
-    def __init__(self, config_file):
+    def __init__(self, config_file, enable_logging):
+        self.enable_logging = enable_logging
         self.config = Trainer.parse_config(config_file)
         self.env = gym.make(self.config['env_name'])
         self.apply_seed()
@@ -26,7 +26,9 @@ class Trainer:
         )
         self.save_file_name = f"DDPG_{self.config['env_name']}_{self.config['seed']}"
         self.memory = ReplayBuffer(self.state_dimension, self.action_dimension)
-        self.writer = SummaryWriter('./logs/' + self.config['env_name'] + '/')
+        if self.enable_logging:
+            from torch.utils.tensorboard import SummaryWriter
+            self.writer = SummaryWriter('./logs/' + self.config['env_name'] + '/')
 
     @staticmethod
     def parse_config(json_file):
@@ -70,7 +72,8 @@ class Trainer:
             if ts >= self.config['start_time_step']:
                 self.agent.train(self.memory, self.config['batch_size'])
             if done:
-                self.writer.add_scalar('Episode Reward', episode_reward, ts)
+                if self.enable_logging:
+                    self.writer.add_scalar('Episode Reward', episode_reward, ts)
                 episode_rewards.append(episode_reward)
                 state = self.env.reset()
                 done = False
@@ -79,5 +82,5 @@ class Trainer:
                 episode_num += 1
         if ts % 1000 == 0:
             evaluations.append(evaluate_policy(self.agent, self.config['env_name'], self.config['seed']))
-            self.agent.save(f"./models/{self.save_file_name}")
+            self.agent.save_checkpoint(f"./models/{self.save_file_name}")
         return episode_rewards, evaluations
