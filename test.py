@@ -6,7 +6,7 @@ from src.agents import *
 
 class Tester:
 
-    def __init__(self, config_file, model_file='./models/ddpg_bipedalwalker_v3_0'):
+    def __init__(self, config_file, model_file='./pretrained_models/bipedal_walker_v3/ddpg_bipedalwalker_v3_0'):
         self.config = Tester.parse_config(config_file)
         self.env = gym.make(self.config['env_name'])
         self.state_dimension = self.env.observation_space.shape[0]
