@@ -6,7 +6,19 @@ Pytorch implementation of the Deep Deterministic Policy Gradients Algorithm for 
 
 ### BipedalWalker-V3
 
+**Environment Link:** [https://gym.openai.com/envs/BipedalWalker-v2/](https://gym.openai.com/envs/BipedalWalker-v2/)
+
+**Mean Reward:** `169.5047038212551` sampled over `20` evaluation episodes.
+
 ![](./Results/BipedalWalker-V3.gif)
+
+### LunarLanderContinuous-V2
+
+**Mean Environment Link:** [https://gym.openai.com/envs/LunarLanderContinuous-v2/](https://gym.openai.com/envs/LunarLanderContinuous-v2/)
+
+**Reward:** `277.938417002226` sampled over `20` evaluation episodes.
+
+![](./Results/LunarLanderContinuous-V2.gif)
 
 ## Reference
 

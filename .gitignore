@@ -1,6 +1,5 @@
 .idea/
 env/
 .DS_Store
-models/
 src/__pycache__/
 __pycache__/
