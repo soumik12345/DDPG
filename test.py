@@ -26,13 +26,13 @@ class Tester:
             configs = json.load(f)
         return configs
 
-    def test(self, render=True):
+    def test(self, eval_episodes, render=True):
         self.mean_rewards = evaluate_policy(
-            self.agent, self.config['env_name'],
-            self.config['seed'], eval_episodes=10, render=render
+            self.agent, self.config['env_name'], self.config['seed'],
+            eval_episodes=eval_episodes, render=render
         )
         print(self.mean_rewards)
 
 
-tester = Tester('./configs/BipedalWalker-v3.json')
-tester.test()
+# tester = Tester('./configs/BipedalWalker-v3.json')
+# tester.test()
