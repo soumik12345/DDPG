@@ -1,0 +1,11 @@
+{
+  "env_name": "MountainCarContinuous-v0",
+  "seed": 0,
+  "discount": 0.99,
+  "tau": 5e-3,
+  "time_steps": 1e6,
+  "start_time_step": 25e3,
+  "expl_noise": 0.1,
+  "batch_size": 256,
+  "evaluate_frequency": 5e3
+}
