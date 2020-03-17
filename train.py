@@ -1,3 +1,4 @@
+import os
 import gym
 import json
 import torch
@@ -29,6 +30,10 @@ class Trainer:
         if self.enable_logging:
             from torch.utils.tensorboard import SummaryWriter
             self.writer = SummaryWriter('./logs/' + self.config['env_name'] + '/')
+        try:
+            os.mkdir('./models')
+        except Exception as e:
+            pass
 
     @staticmethod
     def parse_config(json_file):
@@ -55,10 +60,10 @@ class Trainer:
                 action = self.env.action_space.sample()
             else:
                 action = (
-                        self.agent.select_action(np.array(state))+ np.random.normal(
-                            0, self.max_action * self.config['expl_noise'],
-                            size=self.action_dimension
-                        )
+                        self.agent.select_action(np.array(state)) + np.random.normal(
+                    0, self.max_action * self.config['expl_noise'],
+                    size=self.action_dimension
+                )
                 ).clip(
                     -self.max_action,
                     self.max_action
