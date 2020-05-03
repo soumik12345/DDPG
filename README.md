@@ -1,5 +1,7 @@
 # Deep Deterministic Policy Gradients
 
+[![HitCount](http://hits.dwyl.com/soumik12345/DDPG.svg)](http://hits.dwyl.com/soumik12345/DDPG)
+
 Pytorch implementation of the Deep Deterministic Policy Gradients Algorithm for Continuous Control as described by the paper [Continuous control with deep reinforcement learning](https://arxiv.org/abs/1509.02971) by Timothy P. Lillicrap, Jonathan J. Hunt, Alexander Pritzel, Nicolas Heess, Tom Erez, Yuval Tassa, David Silver, Daan Wierstra.
 
 ## Results
